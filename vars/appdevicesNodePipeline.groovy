@@ -1,7 +1,5 @@
 // vars/appdevicesNodePipeline.groovy
 
-@Library("jenkins-shared-library")
-
 def withDockerCompose(Closure body) {
   docker.image('docker/compose:1.24.1').inside("-v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''", body)
 }
