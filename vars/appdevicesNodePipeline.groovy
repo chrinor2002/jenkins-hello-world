@@ -1,5 +1,7 @@
 // vars/appdevicesNodePipeline.groovy
 
+@Library("jenkins-shared-library")
+
 def withDockerCompose(Closure body) {
   docker.image('docker/compose:1.24.1').inside("-v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''", body)
 }
@@ -9,6 +11,9 @@ def withSonarScanner(Closure body) {
 }
 
 def call(Map pipelineParams) {
+  /* "GLOBAL" SCRIPTED VARIABLES */
+  def version // artifact version to publish
+
   pipeline {
     agent any
     options { disableConcurrentBuilds() }
@@ -137,7 +142,7 @@ def call(Map pipelineParams) {
         sh "docker-compose rm --force"
       }
 
-      slackBuildStatus slackChannel, env.SLACK_USER
+      slackBuildStatus pipelineParams.slackChannel, env.SLACK_USER
     }
   }
 }
