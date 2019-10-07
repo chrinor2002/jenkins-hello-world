@@ -17,14 +17,15 @@ def call(Map pipelineParams) {
     options { disableConcurrentBuilds() }
     stage("Checkout") {
       steps {
-        checkoutWithEnv()
+        //checkoutWithEnv()
       }
     }
 
     stage("Semantic Version") {
       steps {
         script {
-          version = getSemver("master")
+          //version = getSemver("master")
+          version = 'v5.4.4'
           echo version
           echo "Just saying hello world:" + pipelineParams.name
         }
@@ -133,7 +134,7 @@ def call(Map pipelineParams) {
       }
     }*/
   }
-  post {
+  /*post {
     always {
       withDockerCompose {
         sh "docker-compose -p ${env.BUILD_TAG} down --volumes --remove-orphans"
@@ -142,5 +143,5 @@ def call(Map pipelineParams) {
 
       slackBuildStatus pipelineParams.slackChannel, env.SLACK_USER
     }
-  }
+  }*/
 }
