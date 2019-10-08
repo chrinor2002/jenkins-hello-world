@@ -28,7 +28,9 @@ def call(Map pipelineParams) {
               [$class: "LocalBranch", localBranch: "**"]
             ]
           ])
-          appName = adenv.getREPO_NAME()
+          script {
+            appName = adenv.getREPO_NAME()
+          }
         }
       }
 
