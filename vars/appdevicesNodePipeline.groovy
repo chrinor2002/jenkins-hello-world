@@ -13,8 +13,8 @@ def call(Map pipelineParams) {
   def version // artifact version to publish
 
   pipeline {
-    agent any
-    options { disableConcurrentBuilds() }
+    //agent any
+    //options { disableConcurrentBuilds() }
     stage("Checkout") {
       steps {
         //checkoutWithEnv()
