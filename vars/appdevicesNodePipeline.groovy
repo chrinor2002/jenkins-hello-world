@@ -19,15 +19,7 @@ def call(Map pipelineParams) {
     stages {
       stage("Checkout") {
         steps {
-          checkoutWithEnv([
-            $class           : "GitSCM",
-            branches         : scm.branches,
-            userRemoteConfigs: scm.userRemoteConfigs,
-            extensions       : [
-              [$class: "CloneOption", noTags: false],
-              [$class: "LocalBranch", localBranch: "**"]
-            ]
-          ])
+          checkoutWithEnv()
         }
       }
 
