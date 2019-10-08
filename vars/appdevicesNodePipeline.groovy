@@ -35,7 +35,8 @@ def call(Map pipelineParams) {
       stage("Semantic Version") {
         steps {
           script {
-            version = getSemver("master")
+            //version = getSemver("master")
+            version = 'v5.4.4'
             echo version
           }
         }
