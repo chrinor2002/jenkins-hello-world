@@ -18,18 +18,14 @@ def call(Map pipelineParams) {
     stages {
       stage("Checkout") {
         steps {
-          script {
-            echo "Just saying hello world:" + pipelineParams.name
-          }
-          //checkoutWithEnv()
+          checkoutWithEnv()
         }
       }
 
       stage("Semantic Version") {
         steps {
           script {
-            //version = getSemver("master")
-            version = 'v5.4.4'
+            version = getSemver("master")
             echo version
             echo "Just saying hello world:" + pipelineParams.name
           }
