@@ -28,8 +28,14 @@ def call(Map pipelineParams) {
               [$class: "LocalBranch", localBranch: "**"]
             ]
           ])
+        }
+      }
+
+      stage("Setup") {
+        steps {
           script {
             appName = adenv.getREPO_NAME()
+            echo version
           }
         }
       }
