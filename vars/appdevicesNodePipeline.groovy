@@ -11,6 +11,7 @@ def withSonarScanner(Closure body) {
 def call(Map pipelineParams) {
   /* "GLOBAL" SCRIPTED VARIABLES */
   def version // artifact version to publish
+  def appName
 
   pipeline {
     agent any
@@ -18,7 +19,16 @@ def call(Map pipelineParams) {
     stages {
       stage("Checkout") {
         steps {
-          checkoutWithEnv()
+          checkoutWithEnv([
+            $class           : "GitSCM",
+            branches         : scm.branches,
+            userRemoteConfigs: scm.userRemoteConfigs,
+            extensions       : [
+              [$class: "CloneOption", noTags: false],
+              [$class: "LocalBranch", localBranch: "**"]
+            ]
+          ])
+          appName = adenv.getREPO_NAME()
         }
       }
 
@@ -27,12 +37,11 @@ def call(Map pipelineParams) {
           script {
             version = getSemver("master")
             echo version
-            echo "Just saying hello world:" + pipelineParams.name
           }
         }
       }
 
-      /*stage("Skip CI?") {
+      stage("Skip CI?") {
         steps {
           script {
             def tagForHead = sh(script: "git tag -l --points-at HEAD", returnStdout: true).trim()
@@ -57,7 +66,7 @@ def call(Map pipelineParams) {
       stage("Unit") {
         steps {
           withDockerCompose {
-            sh "docker-compose -p ${env.BUILD_TAG} run --rm ai-appinsights-sgw &quot;test&quot;"
+            sh "docker-compose -p ${env.BUILD_TAG} run --rm ${appName} test"
           }
         }
       }
@@ -72,28 +81,20 @@ def call(Map pipelineParams) {
         }
       }
 
-      stage("Audit") {
-        steps {
-          withDockerCompose {
-            sh "docker-compose -p ${env.BUILD_TAG} run --rm ai-appinsights-sgw audit"
-          }
-        }
-      }
-
       stage("Smoke") {
         steps {
           withDockerCompose {
-            sh "docker-compose -p ${env.BUILD_TAG} run --rm ai-appinsights-sgw-smoke"
+            sh "docker-compose -p ${env.BUILD_TAG} run --rm ${appName}-smoke"
           }
         }
       }
 
-      stage("Publish") {
+      /*stage("Publish") {
         steps {
           script {
             docker.withRegistry("https://docker.appdirect.tools", "docker-rw") {
-              docker.image("docker.appdirect.tools/ai-appinsights-sgw/ai-appinsights-sgw").push(version)
-              docker.image("docker.appdirect.tools/ai-appinsights-sgw/ai-appinsights-sgw-smoke").push(version)
+              docker.image("docker.appdirect.tools/${appName}/${appName}").push(version)
+              docker.image("docker.appdirect.tools/${appName}/${appName}-smoke").push(version)
             }
           }
         }
@@ -135,7 +136,7 @@ def call(Map pipelineParams) {
       }*/
     }
   }
-  /*post {
+  post {
     always {
       withDockerCompose {
         sh "docker-compose -p ${env.BUILD_TAG} down --volumes --remove-orphans"
@@ -144,5 +145,5 @@ def call(Map pipelineParams) {
 
       slackBuildStatus pipelineParams.slackChannel, env.SLACK_USER
     }
-  }*/
+  }
 }
