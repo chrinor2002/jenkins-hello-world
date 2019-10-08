@@ -18,6 +18,9 @@ def call(Map pipelineParams) {
     stages {
       stage("Checkout") {
         steps {
+          script {
+            echo "Just saying hello world:" + pipelineParams.name
+          }
           //checkoutWithEnv()
         }
       }
