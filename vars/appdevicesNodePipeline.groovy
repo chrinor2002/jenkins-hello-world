@@ -1,4 +1,25 @@
 // vars/appdevicesNodePipeline.groovy
+
+// Utils
+// ================================================================================
+def withDockerCompose(Closure body) {
+  docker.image('docker/compose:1.24.1').inside("-v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''", body)
+}
+
+def withSonarScanner(Closure body) {
+  docker.image('newtmitch/sonar-scanner:alpine').inside("--entrypoint=''", body)
+}
+
+def getConfig(params, defaults, team_defaults) {
+  if (params.USE_TEAM_DEFAULTS) {
+    // if the team is not found, we want errors
+    defaults += team_defaults[params.USE_TEAM_DEFAULTS]
+  }
+  return defaults + {
+    APP_NAME: adenv.getREPO_NAME()
+  } + params
+}
+
 def call(Map pipelineParams) {
 
   // Constants
@@ -29,29 +50,8 @@ def call(Map pipelineParams) {
   // npm repo cannot be overriden, its a CI/CD controlled
   def npmRepo = 'https://artifactory.appdirect.tools/artifactory/api/npm/npm-local'
 
-  // Utils
-  // ================================================================================
-  def withDockerCompose(Closure body) {
-    docker.image('docker/compose:1.24.1').inside("-v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''", body)
-  }
-
-  def withSonarScanner(Closure body) {
-    docker.image('newtmitch/sonar-scanner:alpine').inside("--entrypoint=''", body)
-  }
-
-  def getConfig(params) {
-    def defaults = DEFAULTS
-    if (params.USE_TEAM_DEFAULTS) {
-      // if the team is not found, we want errors
-      defaults += TEAM_DEFAULTS[params.USE_TEAM_DEFAULTS]
-    }
-    return defaults + {
-      APP_NAME: adenv.getREPO_NAME()
-    } + params
-  }
-
   def version // artifact version to publish
-  def config = getConfig(pipelineParams)
+  def config = getConfig(pipelineParams, DEFAULTS, TEAM_DEFAULTS)
 
   pipeline {
     agent any
