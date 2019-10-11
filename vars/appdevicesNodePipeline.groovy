@@ -11,15 +11,15 @@ def withSonarScanner(Closure body) {
 }
 
 def getConfig(params, defaults, team_defaults) {
-  def config = {}
+  def config = []
   config << defaults
   if (params.USE_TEAM_DEFAULTS) {
     // if the team is not found, we want errors
     config << team_defaults[params.USE_TEAM_DEFAULTS]
   }
-  config << {
+  config << [
     APP_NAME: adenv.getREPO_NAME()
-  }
+  ]
   config << params
   return config
 }
@@ -36,22 +36,22 @@ def call(Map pipelineParams) {
   def MASTER_SCHEMA_ENABLED = 'MASTER_SCHEMA_ENABLED'
   def RELEASE_BRANCH = 'RELEASE_BRANCH'
 
-  def DEFAULTS = {
-    NODE_VERSION: 10
-    SONAR_URL: 'https://sonar.appdirect.tools'
-    SLACK_CHANNEL: '#override-with-real-channel'
-    MASTER_SCHEMA_ENABLED: true
+  def DEFAULTS = [
+    NODE_VERSION: 10,
+    SONAR_URL: 'https://sonar.appdirect.tools',
+    SLACK_CHANNEL: '#override-with-real-channel',
+    MASTER_SCHEMA_ENABLED: true,
     RELEASE_BRANCH: 'master'
-  }
+  ]
 
-  def TEAM_DEFAULTS = {
-    appinsights: {
-      NODE_VERSION: 8
+  def TEAM_DEFAULTS = [
+    appinsights: [
+      NODE_VERSION: 8,
       SLACK_CHANNEL: '#appinsights-git'
-    }
-  }
+    ]
+  ]
 
-  // npm repo cannot be overriden, its a CI/CD controlled
+  // npm repo cannot be overriden, its CI/CD controlled
   def npmRepo = 'https://artifactory.appdirect.tools/artifactory/api/npm/npm-local'
 
   def version // artifact version to publish
