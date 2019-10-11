@@ -18,7 +18,7 @@ def DEFAULTS = {
   RELEASE_BRANCH: 'master'
 }
 
-def PER_TEAM_DEFAULTS = {
+def TEAM_DEFAULTS = {
   appinsights: {
     NODE_VERSION: 8
     SLACK_CHANNEL: '#appinsights-git'
@@ -42,7 +42,7 @@ def getConfig(params) {
   def defaults = DEFAULTS
   if (params.USE_TEAM_DEFAULTS) {
     // if the team is not found, we want errors
-    defaults += PER_TEAM_DEFAULTS[params.USE_TEAM_DEFAULTS]
+    defaults += TEAM_DEFAULTS[params.USE_TEAM_DEFAULTS]
   }
   return defaults + {
     APP_NAME: adenv.getREPO_NAME()
