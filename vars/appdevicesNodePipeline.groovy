@@ -310,6 +310,9 @@ yarn-error.log*
             sh "git tag ${version}"
             sh "git push origin --tags"
           }
+          script {
+            echo "TODO: create release notes"
+          }
         }
       }*/
     }
