@@ -11,13 +11,17 @@ def withSonarScanner(Closure body) {
 }
 
 def getConfig(params, defaults, team_defaults) {
+  def Map config
+  config << defaults
   if (params.USE_TEAM_DEFAULTS) {
     // if the team is not found, we want errors
-    defaults += team_defaults[params.USE_TEAM_DEFAULTS]
+    config << team_defaults[params.USE_TEAM_DEFAULTS]
   }
-  return defaults + {
+  config << {
     APP_NAME: adenv.getREPO_NAME()
-  } + params
+  }
+  config << params
+  return config
 }
 
 def call(Map pipelineParams) {
