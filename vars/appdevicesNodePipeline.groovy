@@ -55,12 +55,17 @@ def call(Map pipelineParams) {
   def npmRepo = 'https://artifactory.appdirect.tools/artifactory/api/npm/npm-local'
 
   def version // artifact version to publish
-  def config = getConfig(pipelineParams, DEFAULTS, TEAM_DEFAULTS)
+  def config // the aggregate pipeline config
 
   pipeline {
     agent any
     options { disableConcurrentBuilds() }
     stages {
+      stage("Setup Pipeline Config") {
+        steps {
+          config = getConfig(pipelineParams, DEFAULTS, TEAM_DEFAULTS)
+        }
+      }
       stage("Checkout") {
         steps {
           checkoutWithEnv()
