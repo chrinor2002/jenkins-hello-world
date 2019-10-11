@@ -2,7 +2,7 @@
 
 // Constants
 // ================================================================================
-def TEAM_DEFAULTS = 'TEAM_DEFAULTS'
+def USE_TEAM_DEFAULTS = 'USE_TEAM_DEFAULTS'
 def APP_NAME = 'APP_NAME'
 def NODE_VERSION = 'NODE_VERSION'
 def SONAR_URL = 'SONAR_URL'
@@ -10,7 +10,7 @@ def SLACK_CHANNEL = 'SLACK_CHANNEL'
 def MASTER_SCHEMA_ENABLED = 'MASTER_SCHEMA_ENABLED'
 def RELEASE_BRANCH = 'RELEASE_BRANCH'
 
-def Map DEFAULTS = {
+def DEFAULTS = {
   NODE_VERSION: 10
   SONAR_URL: 'https://sonar.appdirect.tools'
   SLACK_CHANNEL: '#override-with-real-channel'
@@ -40,11 +40,11 @@ def withSonarScanner(Closure body) {
 
 def getConfig(params) {
   def defaults = DEFAULTS
-  if (params.TEAM_DEFAULTS) {
+  if (params.USE_TEAM_DEFAULTS) {
     // if the team is not found, we want errors
-    defaults += PER_TEAM_DEFAULTS[params.TEAM_DEFAULTS]
+    defaults += PER_TEAM_DEFAULTS[params.USE_TEAM_DEFAULTS]
   }
-  return defaults  + {
+  return defaults + {
     APP_NAME: adenv.getREPO_NAME()
   } + params
 }
