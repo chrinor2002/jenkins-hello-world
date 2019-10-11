@@ -216,14 +216,12 @@ yarn-error.log*
           withDockerCompose {
             sh "docker-compose -p ${env.BUILD_TAG} build"
           }
-        }
-      }
-
-      stage("SonarQube") {
-        steps {
-          withCredentials([string(credentialsId: 'sonar-token', variable: 'SONARQUBE_TOKEN')]) {
-            withSonarScanner {
-              sh "sonar-scanner -Dsonar.login=${env.SONARQUBE_TOKEN} -Dsonar.projectBaseDir=${env.WORKSPACE} -Dsonar.projectVersion=${version}"
+          script {
+            if (config.MASTER_SCHEMA_ENABLED) {
+              echo "TODO: generate master schema"
+              // sh "docker run --rm -v $PWD:/node docker.appdirect.tools/node-dev-${config.NODE_VERSION} $LIBRARY/master_schema.js /node/master_schema.json --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
+            } else {
+              echo "Master schema generation disabled"
             }
           }
         }
@@ -246,10 +244,26 @@ yarn-error.log*
               withDockerCompose {
                 sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config.APP_NAME}-integration"
               }
+            },
+            Contract: {
+              script {
+                echo "TODO: run contract tests"
+              }
             }
           )
           
           
+        }
+      }
+
+      // Note: Scanning needs coverage info produced from test step
+      stage("SonarQube") {
+        steps {
+          withCredentials([string(credentialsId: 'sonar-token', variable: 'SONARQUBE_TOKEN')]) {
+            withSonarScanner {
+              sh "sonar-scanner -Dsonar.login=${env.SONARQUBE_TOKEN} -Dsonar.projectBaseDir=${env.WORKSPACE} -Dsonar.projectVersion=${version}"
+            }
+          }
         }
       }
 
