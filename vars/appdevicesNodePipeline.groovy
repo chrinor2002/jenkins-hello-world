@@ -63,7 +63,9 @@ def call(Map pipelineParams) {
     stages {
       stage("Setup Pipeline Config") {
         steps {
-          config = getConfig(pipelineParams, DEFAULTS, TEAM_DEFAULTS)
+          script {
+            config = getConfig(pipelineParams, DEFAULTS, TEAM_DEFAULTS)
+          }
         }
       }
       stage("Checkout") {
