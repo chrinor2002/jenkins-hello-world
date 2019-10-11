@@ -1,5 +1,35 @@
 // vars/appdevicesNodePipeline.groovy
 
+// Constants
+// ================================================================================
+def TEAM_DEFAULTS = 'TEAM_DEFAULTS'
+def APP_NAME = 'APP_NAME'
+def NODE_VERSION = 'NODE_VERSION'
+def SONAR_URL = 'SONAR_URL'
+def SLACK_CHANNEL = 'SLACK_CHANNEL'
+def MASTER_SCHEMA_ENABLED = 'MASTER_SCHEMA_ENABLED'
+def RELEASE_BRANCH = 'RELEASE_BRANCH'
+
+def Map DEFAULTS = {
+  NODE_VERSION: 10
+  SONAR_URL: 'https://sonar.appdirect.tools'
+  SLACK_CHANNEL: '#override-with-real-channel'
+  MASTER_SCHEMA_ENABLED: true
+  RELEASE_BRANCH: 'master'
+}
+
+def PER_TEAM_DEFAULTS = {
+  appinsights: {
+    NODE_VERSION: 8
+    SLACK_CHANNEL: '#appinsights-git'
+  }
+}
+
+// npm repo cannot be overriden, its a CI/CD controlled
+def npmRepo = 'https://artifactory.appdirect.tools/artifactory/api/npm/npm-local'
+
+// Utils
+// ================================================================================
 def withDockerCompose(Closure body) {
   docker.image('docker/compose:1.24.1').inside("-v /var/run/docker.sock:/var/run/docker.sock --entrypoint=''", body)
 }
@@ -8,10 +38,21 @@ def withSonarScanner(Closure body) {
   docker.image('newtmitch/sonar-scanner:alpine').inside("--entrypoint=''", body)
 }
 
+def getConfig(params) {
+  def defaults = DEFAULTS
+  if (params.TEAM_DEFAULTS) {
+    // if the team is not found, we want errors
+    defaults += PER_TEAM_DEFAULTS[params.TEAM_DEFAULTS]
+  }
+  return defaults  + {
+    APP_NAME: adenv.getREPO_NAME()
+  } + params
+}
+
 def call(Map pipelineParams) {
-  /* "GLOBAL" SCRIPTED VARIABLES */
+
   def version // artifact version to publish
-  def appName
+  def config = getConfig(pipelineParams)
 
   pipeline {
     agent any
@@ -26,8 +67,113 @@ def call(Map pipelineParams) {
       stage("Setup") {
         steps {
           script {
-            appName = adenv.getREPO_NAME()
-            echo version
+            if (!fileExists('sonar-project.properties')) {
+              writeFile(file: 'sonar-project.properties', text: """
+sonar.host.url=${config.SONAR_URL}
+sonar.projectKey=${config.APP_NAME}
+sonar.projectName=${config.APP_NAME}
+sonar.sources=.
+sonar.exclusions=test/**/*,tmp/**/*,node_modules/**/*
+sonar.tests=test
+sonar.test.exclusions=test/fixtures/**/*
+sonar.javascript.file.suffixes=.js
+sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info
+""")
+            }
+            if (!fileExists('Dockerfile')) {
+              writeFile(file: 'Dockerfile', text: """
+FROM node:${config.NODE_VERSION}-alpine
+
+WORKDIR /home/node
+USER node:node
+
+COPY --chown=node:node .npmrc package.json package-lock.json ./
+RUN npm ci && \
+    npm cache clean --force
+
+COPY --chown=node:node . ./
+
+EXPOSE 8101
+ENTRYPOINT ["npm"]
+CMD ["start"]
+""")
+            }
+            if (!fileExists('.dockerignore')) {
+              writeFile(file: '.dockerignore', text: """
+# dependencies
+node_modules
+
+# testing
+coverage
+.scannerwork
+?
+
+# artifacts
+build
+dist
+
+# pipeline
+.deployments
+.dockerignore
+.editorconfig
+docker-compose.yaml
+Dockerfile
+Jenkinsfile
+sonar-project.properties
+
+# git
+.github
+.gitignore
+.git
+
+# IDEs
+.vscode
+.idea
+
+# misc
+.DS_Store
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+""")
+            }
+            if (!fileExists('.npmignore')) {
+              writeFile(file: '.npmignore', text: """
+# dependencies
+node_modules
+
+# testing
+coverage
+.scannerwork
+?
+
+# pipeline
+.deployments
+.dockerignore
+.editorconfig
+docker-compose.yaml
+Dockerfile
+Jenkinsfile
+sonar-project.properties
+
+# git
+.github
+.gitignore
+.git
+
+# IDEs
+.vscode
+.idea
+
+# misc
+.DS_Store
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+""")
+            }
           }
         }
       }
@@ -35,8 +181,7 @@ def call(Map pipelineParams) {
       stage("Semantic Version") {
         steps {
           script {
-            //version = getSemver("master")
-            version = 'v5.4.4'
+            version = getSemver("migrate")
             echo version
           }
         }
@@ -64,14 +209,6 @@ def call(Map pipelineParams) {
         }
       }
 
-      stage("Unit") {
-        steps {
-          withDockerCompose {
-            sh "docker-compose -p ${env.BUILD_TAG} run --rm ${appName} test"
-          }
-        }
-      }
-
       stage("SonarQube") {
         steps {
           withCredentials([string(credentialsId: 'sonar-token', variable: 'SONARQUBE_TOKEN')]) {
@@ -82,11 +219,27 @@ def call(Map pipelineParams) {
         }
       }
 
-      stage("Smoke") {
+      stage("Testing") {
         steps {
-          withDockerCompose {
-            sh "docker-compose -p ${env.BUILD_TAG} run --rm ${appName}-smoke"
-          }
+          parallel(
+            Unit: {
+              withDockerCompose {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config.APP_NAME} test"
+              }
+            },
+            Smoke: {
+              withDockerCompose {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config.APP_NAME}-smoke"
+              }
+            },
+            Integration: {
+              withDockerCompose {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config.APP_NAME}-integration"
+              }
+            }
+          )
+          
+          
         }
       }
 
@@ -94,8 +247,8 @@ def call(Map pipelineParams) {
         steps {
           script {
             docker.withRegistry("https://docker.appdirect.tools", "docker-rw") {
-              docker.image("docker.appdirect.tools/${appName}/${appName}").push(version)
-              docker.image("docker.appdirect.tools/${appName}/${appName}-smoke").push(version)
+              docker.image("docker.appdirect.tools/${config.APP_NAME}/${config.APP_NAME}").push(version)
+              docker.image("docker.appdirect.tools/${config.APP_NAME}/${config.APP_NAME}-smoke").push(version)
             }
           }
         }
@@ -115,7 +268,7 @@ def call(Map pipelineParams) {
                 usernameVariable: "ARTIFACTORY_USER",
                 passwordVariable: "ARTIFACTORY_PASSWD"
               ]]) {
-            sh "curl -u${env.ARTIFACTORY_USER}:${env.ARTIFACTORY_PASSWD} 'https://artifactory.appdirect.tools/artifactory/api/npm/npm-local/auth/appdirect' >> .npmrc"
+            sh "curl -u${env.ARTIFACTORY_USER}:${env.ARTIFACTORY_PASSWD} '${npmRepo}/auth/appdirect' >> .npmrc"
           }
         }
       }
@@ -127,7 +280,7 @@ def call(Map pipelineParams) {
       }
 
       stage("Push Git Tags") {
-        when { branch "master-ad-migrate" }
+        when { branch "migrate" }
         steps {
           sshagent(credentials: ["jenkins-github"]) {
             sh "git tag ${version}"
@@ -144,7 +297,7 @@ def call(Map pipelineParams) {
         sh "docker-compose rm --force"
       }
 
-      slackBuildStatus pipelineParams.slackChannel, env.SLACK_USER
+      slackBuildStatus config.SLACK_CHANNEL, env.SLACK_USER
     }
   }
 }
