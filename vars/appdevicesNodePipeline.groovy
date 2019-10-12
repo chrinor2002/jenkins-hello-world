@@ -79,9 +79,9 @@ def call(Map pipelineParams) {
           script {
             if (!fileExists('sonar-project.properties')) {
               writeFile(file: 'sonar-project.properties', text: """
-sonar.host.url=${config.SONAR_URL}
-sonar.projectKey=${config.APP_NAME}
-sonar.projectName=${config.APP_NAME}
+sonar.host.url=${config[SONAR_URL]}
+sonar.projectKey=${config[APP_NAME]}
+sonar.projectName=${config[APP_NAME]}
 sonar.sources=.
 sonar.exclusions=test/**/*,tmp/**/*,node_modules/**/*
 sonar.tests=test
@@ -92,7 +92,7 @@ sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info
             }
             if (!fileExists('Dockerfile')) {
               writeFile(file: 'Dockerfile', text: """
-FROM node:${config.NODE_VERSION}-alpine
+FROM node:${config[NODE_VERSION]}-alpine
 
 WORKDIR /home/node
 USER node:node
@@ -217,9 +217,9 @@ yarn-error.log*
             sh "docker-compose -p ${env.BUILD_TAG} build"
           }
           script {
-            if (config.MASTER_SCHEMA_ENABLED) {
+            if (config[MASTER_SCHEMA_ENABLED]) {
               echo "TODO: generate master schema"
-              // sh "docker run --rm -v $PWD:/node docker.appdirect.tools/node-dev-${config.NODE_VERSION} $LIBRARY/master_schema.js /node/master_schema.json --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
+              // sh "docker run --rm -v $PWD:/node docker.appdirect.tools/node-dev-${config[NODE_VERSION]} $LIBRARY/master_schema.js /node/master_schema.json --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
             } else {
               echo "Master schema generation disabled"
             }
@@ -232,17 +232,17 @@ yarn-error.log*
           parallel(
             Unit: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config.APP_NAME} test"
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]} test"
               }
             },
             Smoke: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config.APP_NAME}-smoke"
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-smoke"
               }
             },
             Integration: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config.APP_NAME}-integration"
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-integration"
               }
             },
             Contract: {
@@ -261,7 +261,8 @@ yarn-error.log*
         steps {
           withCredentials([string(credentialsId: 'sonar-token', variable: 'SONARQUBE_TOKEN')]) {
             withSonarScanner {
-              sh "sonar-scanner -Dsonar.login=${env.SONARQUBE_TOKEN} -Dsonar.projectBaseDir=${env.WORKSPACE} -Dsonar.projectVersion=${version}"
+              echo "TOOD: enable sonar scanning"
+              //sh "sonar-scanner -Dsonar.login=${env.SONARQUBE_TOKEN} -Dsonar.projectBaseDir=${env.WORKSPACE} -Dsonar.projectVersion=${version}"
             }
           }
         }
@@ -271,8 +272,8 @@ yarn-error.log*
         steps {
           script {
             docker.withRegistry("https://docker.appdirect.tools", "docker-rw") {
-              docker.image("docker.appdirect.tools/${config.APP_NAME}/${config.APP_NAME}").push(version)
-              docker.image("docker.appdirect.tools/${config.APP_NAME}/${config.APP_NAME}-smoke").push(version)
+              docker.image("docker.appdirect.tools/${config[APP_NAME]}/${config[APP_NAME]}").push(version)
+              docker.image("docker.appdirect.tools/${config[APP_NAME]}/${config[APP_NAME]}-smoke").push(version)
             }
           }
         }
@@ -324,7 +325,7 @@ yarn-error.log*
         sh "docker-compose rm --force"
       }
 
-      slackBuildStatus config.SLACK_CHANNEL, env.SLACK_USER
+      slackBuildStatus config[SLACK_CHANNEL], env.SLACK_USER
     }
   }
 }
