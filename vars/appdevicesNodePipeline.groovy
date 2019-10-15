@@ -74,11 +74,12 @@ def call(Map pipelineParams) {
         }
       }
 
-      stage("Setup") {
+      stage("Setup sonar.properties") {
+        when {
+          expression { return !fileExists('sonar-project.properties') }
+        }
         steps {
-          script {
-            if (!fileExists('sonar-project.properties')) {
-              writeFile(file: 'sonar-project.properties', text: """
+          writeFile(file: 'sonar-project.properties', text: """
 sonar.host.url=${config[SONAR_URL]}
 sonar.projectKey=${config[APP_NAME]}
 sonar.projectName=${config[APP_NAME]}
@@ -89,7 +90,12 @@ sonar.test.exclusions=test/fixtures/**/*
 sonar.javascript.file.suffixes=.js
 sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info
 """)
-            }
+        }
+      }
+
+      stage("Setup") {
+        steps {
+          script {
             if (!fileExists('Dockerfile')) {
               writeFile(file: 'Dockerfile', text: """
 FROM node:${config[NODE_VERSION]}-alpine
