@@ -74,122 +74,74 @@ def call(Map pipelineParams) {
         }
       }
 
-      stage("Setup sonar.properties") {
-        when {
-          expression { return !fileExists('sonar-project.properties') }
-        }
-        steps {
-          writeFile(file: 'sonar-project.properties', text: """
-sonar.host.url=${config[SONAR_URL]}
-sonar.projectKey=${config[APP_NAME]}
-sonar.projectName=${config[APP_NAME]}
-sonar.sources=.
-sonar.exclusions=test/**/*,tmp/**/*,node_modules/**/*
-sonar.tests=test
-sonar.test.exclusions=test/fixtures/**/*
-sonar.javascript.file.suffixes=.js
-sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info
-""")
-        }
-      }
-
       stage("Setup") {
         steps {
           script {
-            if (!fileExists('Dockerfile')) {
-              writeFile(file: 'Dockerfile', text: """
-FROM node:${config[NODE_VERSION]}-alpine
-
-WORKDIR /home/node
-USER node:node
-
-COPY --chown=node:node .npmrc package.json package-lock.json ./
-RUN npm ci && \
-    npm cache clean --force
-
-COPY --chown=node:node . ./
-
-EXPOSE 8101
-ENTRYPOINT ["npm"]
-CMD ["start"]
-""")
-            }
-            if (!fileExists('.dockerignore')) {
-              writeFile(file: '.dockerignore', text: """
-# dependencies
-node_modules
-
-# testing
-coverage
-.scannerwork
-?
-
-# artifacts
-build
-dist
-
-# pipeline
-.deployments
-.dockerignore
-.editorconfig
-docker-compose.yaml
-Dockerfile
-Jenkinsfile
-sonar-project.properties
-
-# git
-.github
-.gitignore
-.git
-
-# IDEs
-.vscode
-.idea
-
-# misc
-.DS_Store
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-""")
-            }
-            if (!fileExists('.npmignore')) {
-              writeFile(file: '.npmignore', text: """
-# dependencies
-node_modules
-
-# testing
-coverage
-.scannerwork
-?
-
-# pipeline
-.deployments
-.dockerignore
-.editorconfig
-docker-compose.yaml
-Dockerfile
-Jenkinsfile
-sonar-project.properties
-
-# git
-.github
-.gitignore
-.git
-
-# IDEs
-.vscode
-.idea
-
-# misc
-.DS_Store
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-""")
-            }
+            sh "test -f sonar-project.properties || cat <<EOF > sonar-project.properties\n\
+sonar.host.url=${config[SONAR_URL]}\n\
+sonar.projectKey=${config[APP_NAME]}\n\
+sonar.projectName=${config[APP_NAME]}\n\
+sonar.sources=.\n\
+sonar.exclusions=test/**/*,tmp/**/*,node_modules/**/*\n\
+sonar.tests=test\n\
+sonar.test.exclusions=test/fixtures/**/*\n\
+sonar.javascript.file.suffixes=.js\n\
+sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info\n\
+EOF\n"
+            sh "test -f Dockerfile || cat <<EOF Dockerfile\n\
+FROM node:${config[NODE_VERSION]}-alpine\n\
+\n\
+WORKDIR /home/node\n\
+USER node:node\n\
+\n\
+COPY --chown=node:node .npmrc package.json package-lock.json ./\n\
+RUN npm ci && \\\n\
+    npm cache clean --force\n\
+\n\
+COPY --chown=node:node . ./\n\
+\n\
+EXPOSE 8101\n\
+ENTRYPOINT [\"npm\"]\n\
+CMD [\"start\"]\n\
+EOF\n"
+            sh "test -f .dockerignore || cat <<EOF .dockerignore\n\
+# dependencies\n\
+node_modules\n\
+\n\
+# testing\n\
+coverage\n\
+.scannerwork\n\
+?\n\
+\n\
+# artifacts\n\
+build\n\
+dist\n\
+\n\
+# pipeline\n\
+.deployments\n\
+.dockerignore\n\
+.editorconfig\n\
+docker-compose.yaml\n\
+Dockerfile\n\
+Jenkinsfile\n\
+sonar-project.properties\n\
+\n\
+# git\n\
+.github\n\
+.gitignore\n\
+.git\n\
+\n\
+# IDEs\n\
+.vscode\n\
+.idea\n\
+\n\
+# misc\n\
+.DS_Store\n\
+\n\
+npm-debug.log*\n\
+yarn-debug.log*\n\
+yarn-error.log*\n\
+EOF"
           }
         }
       }
