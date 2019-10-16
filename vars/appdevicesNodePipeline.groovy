@@ -173,7 +173,7 @@ EOF"
         steps {
           withDockerCompose {
             // This "forces" the compose env to get ready for a bunch of parallel jobs
-            sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} -e 'echo setup...'"
+            sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} -c 'echo setup...'"
           }
         }
       }
@@ -198,7 +198,7 @@ EOF"
             },
             Contract: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} -e 'echo TODO: run contract tests'"
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} -c 'echo TODO: run contract tests'"
               }
             }
           )
