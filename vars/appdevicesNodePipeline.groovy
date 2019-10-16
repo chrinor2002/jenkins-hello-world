@@ -92,6 +92,29 @@ sonar.test.exclusions=test/fixtures/**/*\n\
 sonar.javascript.file.suffixes=.js\n\
 sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info\n\
 EOF\n"
+            sh "test -f master_schema.js || cat <<EOF > master_schema.js\n\
+const semver = require('semver');\n\
+const fs = require('fs');\n\
+const path = require('path');\n\
+\n\
+// For some reason the NODE_PATH env variable was not working to faciliate this\n\
+require.main.paths.push(path.join(process.argv[2], 'node_modules'));\n\
+require.main.paths.push(process.argv[2]);\n\
+\n\
+const env = require('wmode-env'); // Uses whatever version that comes with the module\n\
+\n\
+if (semver.lt(env.version, \"3.0.2\")) {\n\
+    console.log(`wmode-env@\${env.version} does not support master schema generation. Skipping.`);\n\
+    return;\n\
+}\n\
+\n\
+env.config.load();\n\
+\n\
+var masterSchemaFile = path.join(process.argv[2], env.config.getMasterSchemaFileName());\n\
+var masterSchema = env.config.getMasterSchema();\n\
+fs.writeFileSync(masterSchemaFile, JSON.stringify(masterSchema));\n\
+console.log('Wrote %s', masterSchemaFile);\n\
+EOF\n"
             sh "test -f .dockerignore || cat <<EOF > .dockerignore\n\
 # dependencies\n\
 node_modules\n\
@@ -129,7 +152,8 @@ sonar-project.properties\n\
 npm-debug.log*\n\
 yarn-debug.log*\n\
 yarn-error.log*\n\
-EOF"
+EOF\n"
+            sh "echo 'master_schema.js' >> .dockerignore"
           }
         }
       }
@@ -164,8 +188,12 @@ EOF"
           }
           script {
             if (config[MASTER_SCHEMA_ENABLED]) {
-              echo "TODO: generate master schema"
-              // sh "docker run --rm -v $PWD:/node docker.appdirect.tools/node-dev-${config[NODE_VERSION]} $LIBRARY/master_schema.js /node/master_schema.json --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
+              sh "docker run --rm \
+                -v \$PWD:/node \
+                --entrypoint=node \
+                docker.appdirect.tools/node-dev-${config[NODE_VERSION]} \
+                ./node/master_schema.js /node/master_schema.json \
+                --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
             } else {
               echo "Master schema generation disabled"
             }
