@@ -170,33 +170,33 @@ EOF"
       }
 
       stage("Testing") {
-          steps {
-            withDockerCompose {
-              sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} echo 'setup...'"
-            }
-            parallel(
-              Unit: {
-                withDockerCompose {
-                  sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]} test"
-                }
-              },
-              Smoke: {
-                withDockerCompose {
-                  sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-smoke"
-                }
-              },
-              Integration: {
-                withDockerCompose {
-                  sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-integration"
-                }
-              },
-              Contract: {
-                withDockerCompose {
-                  sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} echo 'TODO: run contract tests'"
-                }
-              }
-            )
+        steps {
+          withDockerCompose {
+            // This "forces" the compose env to get ready for a bunch of parallel jobs
+            sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} echo 'setup...'"
           }
+          parallel(
+            Unit: {
+              withDockerCompose {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]} test"
+              }
+            },
+            Smoke: {
+              withDockerCompose {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-smoke"
+              }
+            },
+            Integration: {
+              withDockerCompose {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-integration"
+              }
+            },
+            Contract: {
+              withDockerCompose {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} echo 'TODO: run contract tests'"
+              }
+            }
+          )
         }
       }
 
