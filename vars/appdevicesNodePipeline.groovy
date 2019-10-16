@@ -296,7 +296,11 @@ EOF\n"
     post {
       always {
         withDockerCompose {
-          sh "docker-compose -p ${env.BUILD_TAG} down --volumes --remove-orphans"
+          sh "docker-compose -p ${env.BUILD_TAG} down --volumes --remove-orphans || true"
+          sh "docker-compose -p ${env.BUILD_TAG}-test down --volumes --remove-orphans || true"
+          sh "docker-compose -p ${env.BUILD_TAG}-smoke down --volumes --remove-orphans || true"
+          sh "docker-compose -p ${env.BUILD_TAG}-integration down --volumes --remove-orphans || true"
+          sh "docker-compose -p ${env.BUILD_TAG}-contract down --volumes --remove-orphans || true"
           sh "docker-compose rm --force"
         }
 
