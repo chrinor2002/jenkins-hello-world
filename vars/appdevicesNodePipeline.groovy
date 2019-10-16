@@ -170,31 +170,26 @@ EOF"
       }
 
       stage("Testing") {
-        steps {
-          parallel(
-            Unit: {
-              withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]} test"
-              }
-            },
-            Smoke: {
-              withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-smoke"
-              }
-            },
-            Integration: {
-              withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-integration"
-              }
-            },
-            Contract: {
-              script {
-                echo "TODO: run contract tests"
-              }
+        withDockerCompose {
+          steps {
+            script {
+              sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} echo 'setup...'"
             }
-          )
-          
-          
+            parallel(
+              Unit: {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]} test"
+              },
+              Smoke: {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-smoke"
+              },
+              Integration: {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-integration"
+              },
+              Contract: {
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} echo 'TODO: run contract tests'"
+              }
+            )
+          }
         }
       }
 
@@ -204,7 +199,10 @@ EOF"
           withCredentials([string(credentialsId: 'sonar-token', variable: 'SONARQUBE_TOKEN')]) {
             withSonarScanner {
               echo "TOOD: enable sonar scanning"
-              //sh "sonar-scanner -Dsonar.login=${env.SONARQUBE_TOKEN} -Dsonar.projectBaseDir=${env.WORKSPACE} -Dsonar.projectVersion=${version}"
+              /*sh "sonar-scanner \
+              -Dsonar.login=${env.SONARQUBE_TOKEN} \
+              -Dsonar.projectBaseDir=${env.WORKSPACE} \
+              -Dsonar.projectVersion=${version}"*/
             }
           }
         }
@@ -242,7 +240,7 @@ EOF"
 
       stage("Publish NPM") {
         steps {
-          sh "npm publish --scope=@appdirect"
+          sh "npm publish"
         }
       }
 
