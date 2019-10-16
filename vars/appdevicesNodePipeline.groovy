@@ -201,17 +201,16 @@ EOF"
         steps {
           withCredentials([string(credentialsId: 'sonar-token', variable: 'SONARQUBE_TOKEN')]) {
             withSonarScanner {
-              echo "TOOD: enable sonar scanning"
-              /*sh "sonar-scanner \
-              -Dsonar.login=${env.SONARQUBE_TOKEN} \
-              -Dsonar.projectBaseDir=${env.WORKSPACE} \
-              -Dsonar.projectVersion=${version}"*/
+              sh "sonar-scanner \
+                -Dsonar.login=${env.SONARQUBE_TOKEN} \
+                -Dsonar.projectBaseDir=${env.WORKSPACE} \
+                -Dsonar.projectVersion=${version}"
             }
           }
         }
       }
 
-      /*stage("Publish") {
+      stage("Publish") {
         steps {
           script {
             docker.withRegistry("https://docker.appdirect.tools", "docker-rw") {
@@ -258,7 +257,7 @@ EOF"
             echo "TODO: create release notes"
           }
         }
-      }*/
+      }
     }
     post {
       always {
