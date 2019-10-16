@@ -76,7 +76,7 @@ def call(Map pipelineParams) {
 
       stage("Setup") {
         steps {
-          echo config
+          echo config.toString()
           echo config.get(SONAR_URL)
           echo config[SONAR_URL]
           script {
