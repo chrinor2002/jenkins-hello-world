@@ -260,15 +260,15 @@ EOF"
         }
       }*/
     }
-  }
-  post {
-    always {
-      withDockerCompose {
-        sh "docker-compose -p ${env.BUILD_TAG} down --volumes --remove-orphans"
-        sh "docker-compose rm --force"
-      }
+    post {
+      always {
+        withDockerCompose {
+          sh "docker-compose -p ${env.BUILD_TAG} down --volumes --remove-orphans"
+          sh "docker-compose rm --force"
+        }
 
-      slackBuildStatus config[SLACK_CHANNEL], env.SLACK_USER
+        slackBuildStatus config[SLACK_CHANNEL], env.SLACK_USER
+      }
     }
   }
 }
