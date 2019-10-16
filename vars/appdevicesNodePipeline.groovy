@@ -95,7 +95,7 @@ WORKDIR /home/node\n\
 USER node:node\n\
 \n\
 COPY --chown=node:node .npmrc package.json package-lock.json ./\n\
-RUN npm ci && \\\n\
+RUN npm \$(test -f package-lock.json && echo ci || echo install) && \\\n\
     npm cache clean --force\n\
 \n\
 COPY --chown=node:node . ./\n\
