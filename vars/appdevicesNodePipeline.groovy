@@ -183,7 +183,7 @@ EOF"
           parallel(
             Unit: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]} test"
+                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-test"
               }
             },
             Smoke: {
