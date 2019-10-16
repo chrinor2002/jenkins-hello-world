@@ -18,7 +18,8 @@ def getConfig(params, defaults, team_defaults) {
     config << team_defaults[params.USE_TEAM_DEFAULTS]
   }
   config << [
-    APP_NAME: adenv.getREPO_NAME()
+    APP_NAME: adenv.getREPO_NAME(),
+    REPO_NAME: adenv.getREPO_NAME()
   ]
   config << params
   return config
@@ -30,6 +31,7 @@ def call(Map pipelineParams) {
   // ================================================================================
   def USE_TEAM_DEFAULTS = 'USE_TEAM_DEFAULTS'
   def APP_NAME = 'APP_NAME'
+  def REPO_NAME = 'REPO_NAME'
   def NODE_VERSION = 'NODE_VERSION'
   def SONAR_URL = 'SONAR_URL'
   def SLACK_CHANNEL = 'SLACK_CHANNEL'
@@ -46,6 +48,7 @@ def call(Map pipelineParams) {
 
   def TEAM_DEFAULTS = [
     appinsights: [
+      DOCKER_REPO: 'appinsights',
       NODE_VERSION: 8,
       SLACK_CHANNEL: '#appinsights-git'
     ]
@@ -79,8 +82,8 @@ def call(Map pipelineParams) {
           script {
             sh "test -f sonar-project.properties || cat <<EOF > sonar-project.properties\n\
 sonar.host.url=${config[SONAR_URL]}\n\
-sonar.projectKey=${config[APP_NAME]}\n\
-sonar.projectName=${config[APP_NAME]}\n\
+sonar.projectKey=${config[REPO_NAME]}\n\
+sonar.projectName=${config[REPO_NAME]}\n\
 sonar.sources=.\n\
 sonar.exclusions=test/**/*,tmp/**/*,node_modules/**/*\n\
 sonar.tests=test\n\
@@ -214,8 +217,8 @@ EOF"
         steps {
           script {
             docker.withRegistry("https://docker.appdirect.tools", "docker-rw") {
-              docker.image("docker.appdirect.tools/${config[APP_NAME]}/${config[APP_NAME]}").push(version)
-              docker.image("docker.appdirect.tools/${config[APP_NAME]}/${config[APP_NAME]}-smoke").push(version)
+              docker.image("docker.appdirect.tools/${config[DOCKER_REPO]}/${config[APP_NAME]}").push(version)
+              docker.image("docker.appdirect.tools/${config[DOCKER_REPO]}/${config[APP_NAME]}-smoke").push(version)
             }
           }
         }
