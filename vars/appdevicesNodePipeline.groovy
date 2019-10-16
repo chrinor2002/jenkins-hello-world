@@ -76,6 +76,9 @@ def call(Map pipelineParams) {
 
       stage("Setup") {
         steps {
+          echo config
+          echo config.get(SONAR_URL)
+          echo config[SONAR_URL]
           script {
             sh "test -f sonar-project.properties || cat <<EOF > sonar-project.properties\n\
 sonar.host.url=${config[SONAR_URL]}\n\
