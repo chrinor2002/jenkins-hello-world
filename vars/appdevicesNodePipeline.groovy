@@ -169,12 +169,17 @@ EOF"
         }
       }
 
-      stage("Testing") {
+      stage("Testing prep") {
         steps {
           withDockerCompose {
             // This "forces" the compose env to get ready for a bunch of parallel jobs
             sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} echo 'setup...'"
           }
+        }
+      }
+
+      stage("Testing") {
+        steps {
           parallel(
             Unit: {
               withDockerCompose {
