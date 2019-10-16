@@ -11,7 +11,7 @@ def withSonarScanner(Closure body) {
 }
 
 def getConfig(params, defaults, team_defaults) {
-  def config = []
+  def config = [:]
   config << defaults
   if (params.USE_TEAM_DEFAULTS) {
     // if the team is not found, we want errors
