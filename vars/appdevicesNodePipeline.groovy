@@ -238,7 +238,9 @@ EOF"
                 usernameVariable: "ARTIFACTORY_USER",
                 passwordVariable: "ARTIFACTORY_PASSWD"
               ]]) {
+            sh "cat .npmrc"
             sh "curl -u${env.ARTIFACTORY_USER}:${env.ARTIFACTORY_PASSWD} '${npmRepo}/auth/appdirect' >> .npmrc"
+            sh "cat .npmrc"
           }
         }
       }
