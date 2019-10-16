@@ -169,36 +169,27 @@ EOF"
         }
       }
 
-      stage("Testing prep") {
-        steps {
-          withDockerCompose {
-            // This "forces" the compose env to get ready for a bunch of parallel jobs
-            sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} -c 'echo setup...'"
-          }
-        }
-      }
-
       stage("Testing") {
         steps {
           parallel(
             Unit: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-test"
+                sh "docker-compose -p ${env.BUILD_TAG}-test run --rm ${config[APP_NAME]}-test"
               }
             },
             Smoke: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-smoke"
+                sh "docker-compose -p ${env.BUILD_TAG}-smoke run --rm ${config[APP_NAME]}-smoke"
               }
             },
             Integration: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm ${config[APP_NAME]}-integration"
+                sh "docker-compose -p ${env.BUILD_TAG}-integration run --rm ${config[APP_NAME]}-integration"
               }
             },
             Contract: {
               withDockerCompose {
-                sh "docker-compose -p ${env.BUILD_TAG} run --rm --entrypoint sh ${config[APP_NAME]} -c 'echo TODO: run contract tests'"
+                sh "docker-compose -p ${env.BUILD_TAG}-contract run --rm --entrypoint sh ${config[APP_NAME]} -c 'echo TODO: run contract tests'"
               }
             }
           )
