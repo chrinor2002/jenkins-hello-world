@@ -88,20 +88,6 @@ sonar.test.exclusions=test/fixtures/**/*\n\
 sonar.javascript.file.suffixes=.js\n\
 sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info\n\
 EOF\n"
-            sh "test -f Dockerfile || cat <<EOF > Dockerfile\n\
-FROM node:${config[NODE_VERSION]}-alpine\n\
-\n\
-WORKDIR /home/node\n\
-USER node:node\n\
-\n\
-COPY --chown=node:node . ./\n\
-RUN npm ci && \\\n\
-    npm cache clean --force\n\
-\n\
-EXPOSE 8101\n\
-ENTRYPOINT [\"npm\"]\n\
-CMD [\"start\"]\n\
-EOF\n"
             sh "test -f .dockerignore || cat <<EOF > .dockerignore\n\
 # dependencies\n\
 node_modules\n\
