@@ -94,7 +94,7 @@ FROM node:${config[NODE_VERSION]}-alpine\n\
 WORKDIR /home/node\n\
 USER node:node\n\
 \n\
-COPY --chown=node:node ./\n\
+COPY --chown=node:node .npmrc package*.json ./\n\
 RUN npm ci && \\\n\
     npm cache clean --force\n\
 \n\
