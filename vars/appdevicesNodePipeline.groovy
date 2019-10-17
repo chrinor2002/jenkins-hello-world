@@ -189,7 +189,7 @@ EOF\n"
           script {
             if (config[MASTER_SCHEMA_ENABLED]) {
               sh "docker \
-                run \\n\
+                run \
                 --rm \
                 --entrypoint=sh \
                 -v \$PWD/master_schema.js:/node/master_schema.js \
