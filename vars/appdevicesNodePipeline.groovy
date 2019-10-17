@@ -191,7 +191,7 @@ EOF\n"
               sh "docker run --rm \
                 -v \$PWD:/node \
                 --entrypoint=node \
-                docker.appdirect.tools/node-dev-${config[NODE_VERSION]} \
+                docker.appdirect.tools/appdevices/node-dev-${config[NODE_VERSION]} \
                 ./node/master_schema.js /node/master_schema.json \
                 --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
             } else {
