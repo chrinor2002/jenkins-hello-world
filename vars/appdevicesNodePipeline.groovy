@@ -188,14 +188,16 @@ EOF\n"
           }
           script {
             if (config[MASTER_SCHEMA_ENABLED]) {
-              sh "docker-compose \
-                -p ${env.BUILD_TAG}-test \
-                run \
-                --entrypoint=node \
-                -v \$PWD/master_schema.js:/node/master_schema.js \
-                --rm \
-                ${config[APP_NAME]}-test \
-                /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
+              withDockerCompose {
+                sh "docker-compose \
+                  -p ${env.BUILD_TAG}-test \
+                  run \
+                  --entrypoint=node \
+                  -v \$PWD/master_schema.js:/node/master_schema.js \
+                  --rm \
+                  ${config[APP_NAME]}-test \
+                  /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
+              }
             } else {
               echo "Master schema generation disabled"
             }
