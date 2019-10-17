@@ -190,9 +190,10 @@ EOF\n"
             if (config[MASTER_SCHEMA_ENABLED]) {
               sh "docker run --rm \
                 -v \$PWD:/node \
+                -w /node \
                 --entrypoint=node \
                 docker.appdirect.tools/appdevices/node-dev-${config[NODE_VERSION]} \
-                ./node/master_schema.js /node/master_schema.json \
+                /node/master_schema.js /node/master_schema.json \
                 --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
             } else {
               echo "Master schema generation disabled"
