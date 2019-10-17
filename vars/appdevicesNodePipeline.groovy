@@ -104,7 +104,7 @@ require.main.paths.push(process.argv[2]);\n\
 const env = require('wmode-env'); // Uses whatever version that comes with the module\n\
 \n\
 if (semver.lt(env.version, \"3.0.2\")) {\n\
-    console.log(`wmode-env@\\\${env.version} does not support master schema generation. Skipping.`);\n\
+    console.log('wmode-env@' + env.version + ' does not support master schema generation. Skipping.');\n\
     return;\n\
 }\n\
 \n\
