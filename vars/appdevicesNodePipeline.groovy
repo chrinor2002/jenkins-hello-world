@@ -105,7 +105,7 @@ const env = require('wmode-env'); // Uses whatever version that comes with the m
 \n\
 if (semver.lt(env.version, \"3.0.2\")) {\n\
     console.log('wmode-env@' + env.version + ' does not support master schema generation. Skipping.');\n\
-    return;\n\
+    process.exit();\n\
 }\n\
 \n\
 env.config.load();\n\
@@ -188,13 +188,14 @@ EOF\n"
           }
           script {
             if (config[MASTER_SCHEMA_ENABLED]) {
-              sh "docker run --rm \
-                -v \$PWD:/node \
-                -w /node \
+              sh "docker-compose \
+                -p ${env.BUILD_TAG}-test \
+                run \
                 --entrypoint=node \
-                docker.appdirect.tools/appdevices/node-dev-${config[NODE_VERSION]} \
-                /node/master_schema.js /node/master_schema.json \
-                --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
+                -v \$PWD/master_schema.js:/node/master_schema.js \
+                --rm \
+                ${config[APP_NAME]}-test \
+                /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
             } else {
               echo "Master schema generation disabled"
             }
