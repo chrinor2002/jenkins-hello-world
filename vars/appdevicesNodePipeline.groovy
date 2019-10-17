@@ -196,7 +196,7 @@ EOF\n"
                   -v \$PWD/master_schema.js:/node/master_schema.js \
                   --rm \
                   ${config[APP_NAME]}-test \
-                  -c 'npm i semver && /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles'"
+                  -c 'npm i semver && node /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles'"
               }
             } else {
               echo "Master schema generation disabled"
