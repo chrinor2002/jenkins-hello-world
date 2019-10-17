@@ -192,11 +192,11 @@ EOF\n"
                 sh "docker-compose \
                   -p ${env.BUILD_TAG}-test \
                   run \
-                  --entrypoint=node \
+                  --entrypoint=sh \
                   -v \$PWD/master_schema.js:/node/master_schema.js \
                   --rm \
                   ${config[APP_NAME]}-test \
-                  /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles"
+                  -c 'npm i semver && /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles'"
               }
             } else {
               echo "Master schema generation disabled"
