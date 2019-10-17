@@ -193,7 +193,7 @@ EOF\n"
                 --rm \
                 --entrypoint=sh \
                 -v \$PWD/master_schema.js:/node/master_schema.js \
-                docker-dev.artifactory.appcarousel.com/appcarousel/node-dev-8 \
+                docker.appdirect.tools/appdevices/node-dev-8 \
                 -c 'npm i && npm i semver -g && node /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles'"
             } else {
               echo "Master schema generation disabled"
