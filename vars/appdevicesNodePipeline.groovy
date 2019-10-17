@@ -93,13 +93,13 @@ sonar.javascript.file.suffixes=.js\n\
 sonar.javascript.lcov.reportPaths=tmp/coverage/reports/lcov.info\n\
 EOF\n"
             sh "test -f master_schema.js || cat <<EOF > master_schema.js\n\
-// For some reason the NODE_PATH env variable was not working to faciliate this\n\
+// For some reason the NODE_PATH env variable was not working to faciliate this\n\\n\
+const path = require('path');\n\
 require.main.paths.push(path.join(process.argv[2], 'node_modules'));\n\
 require.main.paths.push(process.argv[2]);\n\
 \n\
 semver = require('semver');\n\
 const fs = require('fs');\n\
-const path = require('path');\n\
 \n\
 const env = require('wmode-env'); // Uses whatever version that comes with the module\n\
 \n\
