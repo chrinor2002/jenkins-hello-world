@@ -188,16 +188,13 @@ EOF\n"
           }
           script {
             if (config[MASTER_SCHEMA_ENABLED]) {
-              withDockerCompose {
-                sh "docker-compose \
-                  -p ${env.BUILD_TAG}-test \
-                  run \
-                  --entrypoint=sh \
-                  -v \$PWD/master_schema.js:/node/master_schema.js \
-                  --rm \
-                  ${config[APP_NAME]}-test \
-                  -c 'npm i semver -g && node /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles'"
-              }
+              sh "docker \
+                run \\n\
+                --rm \
+                --entrypoint=sh \
+                -v \$PWD/master_schema.js:/node/master_schema.js \
+                docker-dev.artifactory.appcarousel.com/appcarousel/node-dev-8 \
+                -c 'npm i && npm i semver -g && node /node/master_schema.js /node --WMUseSimpleLogger --WMIgnoreNoPropertiesFiles'"
             } else {
               echo "Master schema generation disabled"
             }
